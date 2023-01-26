@@ -2,7 +2,6 @@
  * Copyright: LogicalLokesh. All rights reserved.
  *
  * File:   main.h
- * Ver:    1.0.0
  *
  * Brief: Welcome to the Bean Bank!
  *        The bank that's here to help you save your beans and grow your wealth.

@@ -2,7 +2,6 @@
  * Copyright: LogicalLokesh. All rights reserved.
  *
  * File:   main.cpp
- * Ver:    1.0.0
  *
  * Brief: Welcome to the Bean Bank!
  *        The bank that's here to help you save your beans and grow your wealth.
@@ -100,11 +99,19 @@ int main()
 			continue;
 		}
 		if (userChoice == "7")
+		{
+			userChoice.clear();
+			// Use the ShellExecute function to open the URL
+			ShellExecute(nullptr, L"open", L"https://logicallokesh.net", nullptr, nullptr, SW_SHOWNORMAL);
+			Sleep(2000);
+			continue;
+		}
+		if (userChoice == "8")
 			return 0;
 
 		// User has entered invalid choice.
 		SetConsoleColor(6);
-		cout << "   Invalid Input, please enter your choice: (1, 2, 3, 4, 5, 6, 7)";
+		cout << "   Invalid Input, please enter your choice: (1, 2, 3, 4, 5, 6, 7, 8)";
 		userChoice.clear();
 		Sleep(2000);
 	} while (true);
@@ -245,7 +252,8 @@ void ShowMenu()
 		<< "   4. Create New Account" << "\n"
 		<< "   5. Close An Account" << "\n"
 		<< "   6. Show All Accounts" << "\n"
-		<< "   7. Quit\n" << "\n"
+		<< "   7. Support\n"
+		<< "   8. Quit\n" << "\n"
 		<< "   Enter your choice: ";
 }
 
@@ -438,7 +446,7 @@ void NewAccountWizard()
 
 #pragma endregion
 
-#pragma region Comfirm and Create Account
+#pragma region Confirm and Create Account
 
 	// At this stage, all details are valid. Now display all user info for confirmation.
 	ShowAppInfo();
@@ -898,7 +906,6 @@ void CloseAccountWizard()
 
 			auto userItr = vUsers.begin();
 
-			// Try to iterate over vUsers with given credentials to add funds.
 			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
 			{
 				if (userItr->GetAccountNumber() == accountNumber)
