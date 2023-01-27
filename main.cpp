@@ -53,6 +53,7 @@ int main()
 	{
 		ShowMenu();
 		getline(cin, userChoice);
+
 		// check if choice is empty, or accidentally clicked enter.
 		if (!userChoice.length())
 		{
@@ -101,8 +102,11 @@ int main()
 		if (userChoice == "7")
 		{
 			userChoice.clear();
+			ShowAppInfo();
+			cout << "\n   Opening Support page in your browser!" << endl;
+			Sleep(2000);
 			// Use the ShellExecute function to open the URL
-			ShellExecute(nullptr, L"open", L"https://logicallokesh.net", nullptr, nullptr, SW_SHOWNORMAL);
+			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank/", nullptr, nullptr, SW_SHOWNORMAL);
 			Sleep(2000);
 			continue;
 		}
@@ -114,6 +118,7 @@ int main()
 		cout << "   Invalid Input, please enter your choice: (1, 2, 3, 4, 5, 6, 7, 8)";
 		userChoice.clear();
 		Sleep(2000);
+
 	} while (true);
 }
 
