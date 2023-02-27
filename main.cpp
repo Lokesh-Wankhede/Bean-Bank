@@ -1,19 +1,6 @@
 /**
  * Copyright: LogicalLokesh. All rights reserved.
  *
- * File:   main.cpp
- *
- * Brief: Welcome to the Bean Bank!
- *        The bank that's here to help you save your beans and grow your wealth.
- *        With our state-of-the-art banking system, written in the latest
- *        and greatest version of C++, you can be sure that your beans are in safe hands.
- *        We've got all the features you need, like account creation, depositing
- *        and withdrawing funds, checking your balance and even closing your
- *        account (just in case you need to escape from the bean-holding life).
- *        And with our top-notch security features, you can be sure that your
- *        beans will be safe from even the most determined bean thieves.
- *        So why wait? Open an account with Bean Bank today and start saving your beans!
- *
  * Note:  Bean Bank requires C++ standard 20 or above,
  *        and designed to work on Windows operating system.
  *
@@ -106,7 +93,8 @@ int main()
 			cout << "\n   Opening Support page in your browser!" << endl;
 			Sleep(2000);
 			// Use the ShellExecute function to open the URL
-			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank/", nullptr, nullptr, SW_SHOWNORMAL);
+			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank/",
+				nullptr, nullptr, SW_SHOWNORMAL);
 			Sleep(2000);
 			continue;
 		}
@@ -118,7 +106,6 @@ int main()
 		cout << "   Invalid Input, please enter your choice: (1, 2, 3, 4, 5, 6, 7, 8)";
 		userChoice.clear();
 		Sleep(2000);
-
 	} while (true);
 }
 
@@ -226,7 +213,7 @@ void ShowAppInfo()
 				const int major = HIWORD(fileInfo->dwProductVersionMS);
 				const int minor = LOWORD(fileInfo->dwProductVersionMS);
 				const int build = HIWORD(fileInfo->dwProductVersionLS);
-				cout << "\n          Client Version: " << major << "." << minor << "." << build;
+				cout << "\n             Version: " << major << "." << minor << "." << build;
 			}
 		}
 		delete[] buffer;

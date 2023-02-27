@@ -1,8 +1,6 @@
 /**
  * Copyright: LogicalLokesh. All rights reserved.
  *
- * File:   Bank.h
- *
  * Brief:  Account class for Bean Bank.
  *
  * Author: LogicalLokesh (github.com/LogicalLokesh)

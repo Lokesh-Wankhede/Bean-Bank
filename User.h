@@ -1,8 +1,6 @@
 /**
  * Copyright: LogicalLokesh. All rights reserved.
  *
- * File:   User.h
- *
  * Brief:  User class for Bean Bank.
  *
  * Author: LogicalLokesh (github.com/LogicalLokesh)
@@ -119,7 +117,7 @@ public:
 	* \param userId id of the user
 	* \return True if userId is valid, false otherwise.
 	*/
-	static bool ValidateUserId(const int userId) { return (userId > 0 && userId < 50000); }
+	static bool ValidateUserId(const int userId) { return (userId > 0 && userId <= 50000); }
 
 	/**
 	* \brief Validates the user password. it must be 7 digit number.
