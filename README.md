@@ -92,6 +92,4 @@ You can also reach me by:
 
 [Instagram](https://instagram.com/logicallokesh)
 
-[Face-book](https://facebook.com/logicallokesh)
-
 [Website](https://logicallokesh.net)
