@@ -477,7 +477,7 @@ void NewAccountWizard()
 	vUsers.push_back(user);
 	Bank::WriteUserDataFile(user);
 	// Create an account with null values first. because the order
-	// of the data may change future.
+	// of the data may change in the future.
 	AccountDetailsT account{ NULL,NULL,NULL,NULL };
 	account.AccountNumber = user.GetAccountNumber();
 	account.UserId = userId;
@@ -660,27 +660,29 @@ void DepositFundsWizard()
 			// Try to iterate over vUsers with given credentials to add funds.
 			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
 			{
-				if (userItr->GetAccountNumber() == accountNumber)
-				{
-					if (userItr->GetUserPassword() != userPassword)
-						throw InvalidPasswordException();
-					userItr->AddBalance(amount);
-					if (!Bank::SyncUserAccountData())
-						throw;
-					if (!Bank::WriteAccountDataFile())
-						throw;
+				if (userItr->GetAccountNumber() != accountNumber)
+					continue;
 
-					SetConsoleColor(2);
-					cout << "\n   Authentication Successful."
-						<< "\n   Funds Deposited Successfully." << endl;
-					cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
-					SetConsoleColor(7);
-					cout << "\n   Press enter to return to main menu.";
-					{
-						CONSUME_NEWLINE_CHARACTER
-					}
-					return;
+				if (userItr->GetUserPassword() != userPassword)
+					throw InvalidPasswordException();
+
+				userItr->AddBalance(amount);
+
+				if (!Bank::SyncUserAccountData())
+					throw;
+				if (!Bank::WriteAccountDataFile())
+					throw;
+
+				SetConsoleColor(2);
+				cout << "\n   Authentication Successful."
+					<< "\n   Funds Deposited Successfully." << endl;
+				cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
+				SetConsoleColor(7);
+				cout << "\n   Press enter to return to main menu.";
+				{
+					CONSUME_NEWLINE_CHARACTER
 				}
+				return;
 			}
 
 			// Check if user exists in vUsers.
@@ -779,28 +781,29 @@ void WithdrawFundsWizard()
 
 			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
 			{
-				if (userItr->GetAccountNumber() == accountNumber)
-				{
-					if (userItr->GetUserPassword() != userPassword)
-						throw InvalidPasswordException();
-					if (!userItr->WithdrawBalance(amount))
-						throw InsufficientBalanceException();
-					if (!Bank::SyncUserAccountData())
-						throw;
-					if (!Bank::WriteAccountDataFile())
-						throw;
+				if (userItr->GetAccountNumber() != accountNumber)
+					continue;
 
-					SetConsoleColor(2);
-					cout << "\n   Authentication Successful."
-						<< "\n   Funds Withdrawal Successful." << endl;
-					cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
-					SetConsoleColor(7);
-					cout << "\n   Press enter to return to main menu.";
-					{
-						CONSUME_NEWLINE_CHARACTER
-					}
-					return;
+				if (userItr->GetUserPassword() != userPassword)
+					throw InvalidPasswordException();
+				if (!userItr->WithdrawBalance(amount))
+					throw InsufficientBalanceException();
+				if (!Bank::SyncUserAccountData())
+					throw;
+				if (!Bank::WriteAccountDataFile())
+					throw;
+
+				SetConsoleColor(2);
+				cout << "\n   Authentication Successful."
+					<< "\n   Funds Withdrawal Successful." << endl;
+				cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
+				SetConsoleColor(7);
+				cout << "\n   Press enter to return to main menu.";
+				{
+					CONSUME_NEWLINE_CHARACTER
 				}
+				return;
+
 			}
 
 			// check if user exists in vUsers.
@@ -900,54 +903,55 @@ void CloseAccountWizard()
 
 			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
 			{
-				if (userItr->GetAccountNumber() == accountNumber)
+				if (userItr->GetAccountNumber() != accountNumber)
+					continue;
+
+				if (userItr->GetUserPassword() != userPassword)
+					throw InvalidPasswordException();
+
+				// Iterate over vUsers vector to find the user
+				userItr = std::ranges::find_if(vUsers, [&](const User& user)
+					{
+						return user.GetAccountNumber() == accountNumber;
+					});
+				if (userItr != vUsers.end())
 				{
-					if (userItr->GetUserPassword() != userPassword)
-						throw InvalidPasswordException();
+					// Calculate the index of the user.
+					const long long i = std::distance(vUsers.begin(), userItr);
+					vUsers.erase(vUsers.begin() + static_cast<int>(i));
 
-					// Iterate over vUsers vector to find the user
-					userItr = std::ranges::find_if(vUsers, [&](const User& user)
+					// Iterate over vAccountDetails vector to find the user.
+					if (auto accountItr = std::ranges::find_if(vAccountDetails,
+						[&](const AccountDetailsT& account)
 						{
-							return user.GetAccountNumber() == accountNumber;
-						});
-					if (userItr != vUsers.end())
+							return account.AccountNumber == accountNumber;
+						}); accountItr != vAccountDetails.end())
 					{
-						// Calculate the index of the user.
-						const long long i = std::distance(vUsers.begin(), userItr);
-						vUsers.erase(vUsers.begin() + static_cast<int>(i));
-
-						// Iterate over vAccountDetails vector to find the user.
-						if (auto accountItr = std::ranges::find_if(vAccountDetails,
-							[&](const AccountDetailsT& account)
-							{
-								return account.AccountNumber == accountNumber;
-							}); accountItr != vAccountDetails.end())
-						{
-							// Erase the user from vAccountDetails vector.
-							const long long k = std::distance(vAccountDetails.begin(), accountItr);
-							vAccountDetails.erase(vAccountDetails.begin() + static_cast<int>(k));
-						}
+						// Erase the user from vAccountDetails vector.
+						const long long k = std::distance(vAccountDetails.begin(), accountItr);
+						vAccountDetails.erase(vAccountDetails.begin() + static_cast<int>(k));
 					}
-
-					if (!Bank::SyncUserAccountData())
-						throw;
-					if (!Bank::WriteAccountDataFile())
-						throw;
-					if (!Bank::WriteUserDataFile())
-						throw;
-					Account::RemoveAccount();
-					User::RemoveUser();
-					Bank::RemoveUser();
-					SetConsoleColor(2);
-					cout << "\n   Authentication Successful."
-						<< "\n   Account Closed Successfully." << endl;
-					SetConsoleColor(7);
-					cout << "\n   Press enter to return to main menu.";
-					{
-						CONSUME_NEWLINE_CHARACTER
-					}
-					return;
 				}
+
+				if (!Bank::SyncUserAccountData())
+					throw;
+				if (!Bank::WriteAccountDataFile())
+					throw;
+				if (!Bank::WriteUserDataFile())
+					throw;
+				Account::RemoveAccount();
+				User::RemoveUser();
+				Bank::RemoveUser();
+				SetConsoleColor(2);
+				cout << "\n   Authentication Successful."
+					<< "\n   Account Closed Successfully." << endl;
+				SetConsoleColor(7);
+				cout << "\n   Press enter to return to main menu.";
+				{
+					CONSUME_NEWLINE_CHARACTER
+				}
+				return;
+
 			}
 
 			// Check if user exists in vUsers.
