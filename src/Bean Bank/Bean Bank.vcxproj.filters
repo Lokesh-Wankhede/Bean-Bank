@@ -27,9 +27,6 @@
     <ClCompile Include="src\Bank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lib\sqlite-amalgamation-3410200\shell.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lib\sqlite-amalgamation-3410200\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,9 +48,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lib\sqlite-amalgamation-3410200\sqlite3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lib\sqlite-amalgamation-3410200\sqlite3ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

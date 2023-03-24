@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lib\sqlite-amalgamation-3410200\shell.c" />
     <ClCompile Include="lib\sqlite-amalgamation-3410200\sqlite3.c" />
     <ClCompile Include="src\Account.cpp" />
     <ClCompile Include="src\Bank.cpp" />
@@ -32,7 +31,6 @@
     <ClInclude Include="include\Bean Bank.h" />
     <ClInclude Include="include\User.h" />
     <ClInclude Include="lib\sqlite-amalgamation-3410200\sqlite3.h" />
-    <ClInclude Include="lib\sqlite-amalgamation-3410200\sqlite3ext.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
