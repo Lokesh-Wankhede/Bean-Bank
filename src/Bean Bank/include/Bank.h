@@ -6,123 +6,60 @@
 
 #pragma once
 
-#ifndef BANK_H_
-#define BANK_H_
-
-
-#include <fstream>
 #include <string>
 #include <vector>
 #include "User.h"
 
 using std::string;
-using std::getline;
 using std::vector;
 using std::ifstream;
 using std::ofstream;
 
-inline vector<User> vUsers;
 
-using AccountDetailsT = struct
-{
-	unsigned long long AccountNumber;
-	int UserId;
-	unsigned long long UserPassword;
-	int Balance;
-};
-
-inline vector<AccountDetailsT> vAccountDetails;
-
-class Bank
+/**
+ * \brief Bank class follows singleton pattern, Use GetInstance().
+ */
+class Bank // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
 	/**
-	 * \brief Loads the user_data file into vUsers.
-	 *
-	 * \return True on success, false otherwise.
+	 * \brief Create the instance, or return the reference if already instantiated.
+	 * \return A reference to bank instance.
 	 */
-	static auto LoadUserDataFile() -> bool;
-
-	/**
-	 * \brief Write vUsers into user_data file.
-	 *
-	 * \return True on success, false otherwise.
-	 */
-	static auto WriteUserDataFile() -> bool;
-
-	/**
-	 * \brief Write user to user_data file.
-	 * \param user to write.
-	 * \return True on success, false otherwise.
-	 */
-	static auto WriteUserDataFile(const User& user) -> bool;
-
-	/**
-	 * \brief Write the vAccountDetails to the account_data file.
-	 *
-	 * \return True on success, false otherwise.
-	 */
-	static auto WriteAccountDataFile() -> bool;
-
-	/**
-	 * \brief Write the accountDetails_t to the account_data file.
-	 *
-	 * \param account object to write.
-	 * \return True on success, false otherwise.
-	 */
-	static auto WriteAccountDataFile(const AccountDetailsT& account) -> bool;
-
-	/**
-	 * \brief Load the account_data file into vAccountDetails.
-	 *
-	 * \return True on success, false otherwise.
-	 */
-	static auto LoadUserAccountFile() -> bool;
-
-	/**
-	 * \brief Performs very basic level integrity check on user_data and user_accounts,
-	 * then binds and synchronizes their data.
-	 *
-	 * \return true on success, false otherwise.
-	 */
-	[[nodiscard]] static auto BindUserData() -> bool;
-
-	/**
-	 * \brief Synchronizes the User data with Account Data.
-	 *
-	 * \return True on success, false otherwise.
-	 */
-	static auto SyncUserAccountData() -> bool;
+	static auto GetInstance() -> Bank&;
 
 #pragma region Getters and Setters
 
 	/**
 	* \brief Add one user to the bank.
-	* \return true on success.
+	* \return true on success, false otherwise.
 	*/
 	static auto AddUser() -> bool;
 
 	/**
 	 * \brief Remove one user from the bank.
-	 * \return true on success.
+	 * \return true on success, false otherwise.
 	 */
 	static auto RemoveUser() -> bool;
 
-	[[nodiscard]] static auto GetTotalUserCount() -> unsigned int;
+	[[nodiscard("Please handle the return value.")]] static auto
+	GetTotalUserCount() -> unsigned int;
 
 	/**
 	 * \brief Sets the TotalUserCount to the given value.
 	 * \param count The count to set the value to.
-	 * \return True on success, false otherwise.
+	 * \return true on success, false otherwise.
 	 */
 	static auto SetTotalUserCount(unsigned int count) -> bool;
 
 #pragma endregion
 
 private:
+	Bank() = default; // private constructor to prevent direct instantiation
+	// delete copy constructor
+	Bank(const Bank&) = delete; // NOLINT(modernize-use-equals-delete)
+	// delete assignment operator
+	auto operator=(const Bank&) -> Bank& = delete; // NOLINT(modernize-use-equals-delete)
+
 	static unsigned int TotalUsers;
 };
-
-inline Bank bank;
-
-#endif

@@ -6,13 +6,10 @@
 
 #pragma once
 
-#ifndef ACCOUNT_H_
-#define ACCOUNT_H_
-
 #include <random>
 #include <set>
 
-// TODO: Make the Account class as Abstract by adding a pure virtual function
+// TODO: Make the class Abstract by adding a pure virtual function
 class Account
 {
 public:
@@ -37,9 +34,10 @@ public:
 	auto AddBalance(int balance) -> bool;
 	auto WithdrawBalance(int amount) -> bool;
 	auto SetBalance(int balance) -> bool;
-	[[nodiscard]] auto GetBalance() const -> int;
+	[[nodiscard("Please handle the return value.")]] auto GetBalance() const -> int;
 	auto SetAccountNumber(unsigned long long accountNumber) -> bool;
-	[[nodiscard]] auto GetAccountNumber() const -> unsigned long long;
+	[[nodiscard("Please handle the return value.")]] auto
+		GetAccountNumber() const -> unsigned long long;
 
 #pragma endregion
 
@@ -48,6 +46,3 @@ private:
 	int MBalance{ 0 };
 	static unsigned int TotalAccounts;
 };
-
-
-#endif

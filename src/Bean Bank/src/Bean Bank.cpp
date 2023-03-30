@@ -7,11 +7,13 @@
 #include "Bean Bank.h"
 
 #include <Windows.h>
-#pragma comment(lib, "version.lib")           // for version info in ShowAppInfo();
+#pragma comment(lib, "version.lib") // for version info, used in GetVersionInfo();
 #include <iostream>
 #include <string>
 #include "Account.h"
 #include "Bank.h"
+#include "CoreException.h"
+#include "Logger.h"
 #include "User.h"
 
 
@@ -23,106 +25,80 @@ using std::getline;
 
 auto main() -> int
 {
-	// Load the user_data, exit upon failure.
-	if (!Bank::LoadUserDataFile())
-		ExitWithMessage("Failed to load the user_data.");
-	// Load the account_data, exit upon failure.
-	if (!Bank::LoadUserAccountFile())
-		ExitWithMessage("Failed to load the account_data.");
-	// Sync and perform data binding.
-	if (!Bank::BindUserData())
-		ExitWithMessage("User data integrity violation.");
+	InitializeLogger();
 
+	// don't mess with this code, it's on its coffee break right now
+	// get user's input with some 90s flair
 	string userChoice;
+	int choice;
+
 	do
 	{
+		// show what's in the menu
 		ShowMenu();
-		getline(cin, userChoice);
 
-		// check if choice is empty, or accidentally clicked enter.
-		if (!userChoice.length())
+		// get user's input and check if it's valid
+		if (!getline(cin, userChoice))
 		{
-			SetConsoleColor(6);
-			cout << "\n   Please enter a valid choice.";
-			userChoice.clear();
-			Sleep(2000);
+			// if user input is invalid, politely tell them to fix it
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
 			continue;
 		}
-		if (userChoice == "1")
+
+		// use istringstream to check if user entered a valid choice
+		if (std::istringstream iss(userChoice); !(iss >> choice) || iss.peek() != EOF)
 		{
-			userChoice.clear();
-			CheckBalanceWizard();
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
 			continue;
 		}
-		if (userChoice == "2")
+
+		// switch statement to handle user's choice
+		switch (choice)
 		{
-			userChoice.clear();
-			DepositFundsWizard();
-			continue;
-		}
-		if (userChoice == "3")
-		{
-			userChoice.clear();
-			WithdrawFundsWizard();
-			continue;
-		}
-		if (userChoice == "4")
-		{
-			NewAccountWizard();
-			userChoice.clear();
-			continue;
-		}
-		if (userChoice == "5")
-		{
-			userChoice.clear();
-			CloseAccountWizard();
-			continue;
-		}
-		if (userChoice == "6")
-		{
-			userChoice.clear();
-			ShowAllAccountsWizard();
-			continue;
-		}
-		if (userChoice == "7")
-		{
-			userChoice.clear();
-			ShowAppInfo();
-			cout << "\n   Opening Support page in your browser!" << endl;
-			Sleep(2000);
-			// Use the ShellExecute function to open the URL
-			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank/",
-				nullptr, nullptr, SW_SHOWNORMAL);
-			Sleep(2000);
-			continue;
-		}
-		if (userChoice == "8")
+		case 1:
+			cout << "\n   Check Balance Wizard\n\n";
+			break;
+		case 2:
+			cout << "\n   Deposit Funds Wizard\n\n";
+			break;
+		case 3:
+			cout << "\n   Withdraw Funds Wizard\n\n";
+			break;
+		case 4:
+			cout << "\n   New Account Wizard\n\n";
+			break;
+		case 5:
+			cout << "\n   Close Account Wizard\n\n";
+			break;
+		case 6:
+			cout << "\n   Show All Accounts Wizard\n\n";
+			break;
+		case 7:
+			cout << "\n   Opening Support page in your browser!\n\n";
+			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank", nullptr, nullptr,
+				SW_SHOWNORMAL);
+			ExitWithMessage("WTF bro!");
+			break;
+		case 8:
+			// user has decided to exit the program
 			return 0;
 
-		// User has entered invalid choice.
-		SetConsoleColor(6);
-		cout << "   Invalid Input, please enter your choice: (1, 2, 3, 4, 5, 6, 7, 8)";
-		userChoice.clear();
+		default:
+			// if user enters something other than a valid choice, they need their glasses
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
+		}
+
+		// wait for two seconds before showing the menu again
 		Sleep(2000);
 	} while (true);
 }
 
-/**
- * \brief Changes the color of the console.
- *
- * \param colorCode (1 Blue) (2 Green) (3 Teal) (4 Red) (5 Purple) (6 Yellow) (7 White) (8 Grey)
- */
 auto SetConsoleColor(const uint8_t colorCode) -> void
 {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), colorCode);
 }
 
-/**
- * \brief Exit the program with custom message screen.
- *
- * \param message string to be displayed
- */
-[[noreturn]] auto ExitWithMessage(const string& message) -> void
+auto ExitWithMessage(const string& message) -> void
 {
 	MessageBeep(MB_ICONERROR);
 	SetConsoleTitleW(L"Bean Bank | Error");
@@ -147,9 +123,40 @@ auto SetConsoleColor(const uint8_t colorCode) -> void
 	std::quick_exit(-1);
 }
 
-/**
- * \brief Clears the console screen.
- */
+auto GetVersionInfo() -> VersionInfoT
+{
+	wchar_t path[MAX_PATH];
+	// get the path of the current exe
+	GetModuleFileName(nullptr, path, MAX_PATH);
+	DWORD handle = 0;
+	// set default version to 0.0.0
+	VersionInfoT versionInfo{};
+
+	// if we can get the version info size, we might be able to get the version info
+	if (const DWORD size = GetFileVersionInfoSize(path, &handle))
+	{
+		// allocate a buffer to hold the version info
+		const auto buffer = new char[size];
+		if (GetFileVersionInfo(path, handle, size, buffer))
+		{
+			// get the fixed file info from the buffer
+			VS_FIXEDFILEINFO* fileInfo = nullptr;
+			UINT len;
+			if (VerQueryValue(buffer, L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &len))
+			{
+				// set the version info based on the product version
+				versionInfo.Major = HIWORD(fileInfo->dwProductVersionMS);
+				versionInfo.Minor = LOWORD(fileInfo->dwProductVersionMS);
+				versionInfo.Build = HIWORD(fileInfo->dwProductVersionLS);
+			}
+		}
+		// thank you, buffer! You served us well, but now it's time to go back to the void
+		delete[] buffer;
+	}
+	// return the version info we found, or the default one if we didn't find anything
+	return versionInfo;
+}
+
 auto ClearScreen() -> void
 {
 	const HANDLE gHConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -187,35 +194,14 @@ auto ClearScreen() -> void
 	SetConsoleCursorPosition(gHConsole, homeCoords);
 }
 
-/**
- * \brief Clears the console and shows application information and version info.
- */
 auto ShowAppInfo() -> void
 {
 	ClearScreen();
 	SetConsoleColor(3);
 	cout << "\n   ------------ Bean Bank ------------";
 	SetConsoleColor(2);
-	wchar_t path[MAX_PATH];
-	GetModuleFileName(nullptr, path, MAX_PATH);
-	DWORD handle = 0;
-	if (const DWORD size = GetFileVersionInfoSize(path, &handle))
-	{
-		const auto buffer = new char[size];
-		if (GetFileVersionInfo(path, handle, size, buffer))
-		{
-			VS_FIXEDFILEINFO* fileInfo = nullptr;
-			UINT len;
-			if (VerQueryValue(buffer, L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &len))
-			{
-				const int major = HIWORD(fileInfo->dwProductVersionMS);
-				const int minor = LOWORD(fileInfo->dwProductVersionMS);
-				const int build = HIWORD(fileInfo->dwProductVersionLS);
-				cout << "\n             Version: " << major << "." << minor << "." << build;
-			}
-		}
-		delete[] buffer;
-	}
+	const auto [Major, Minor, Build] = GetVersionInfo();
+	cout << "\n             Version: " << Major << "." << Minor << "." << Build;
 	SetConsoleColor(3);
 	cout << "\n     Crafted with ";
 	SetConsoleColor(4);
@@ -226,9 +212,6 @@ auto ShowAppInfo() -> void
 	SetConsoleColor(7);
 }
 
-/**
- * \brief Clears the console and shows the main menu.
- */
 auto ShowMenu() -> void
 {
 	SetConsoleTitleW(L"Bean Bank");
@@ -247,9 +230,6 @@ auto ShowMenu() -> void
 		<< "   Enter your choice: ";
 }
 
-/**
- * \brief Creates a new user account.
- */
 auto NewAccountWizard() -> void
 {
 	User user;
@@ -470,16 +450,7 @@ auto NewAccountWizard() -> void
 	}
 	catch (const std::exception&) { return; }
 
-	vUsers.push_back(user);
-	Bank::WriteUserDataFile(user);
-	// Create an account with null values first. because the order
-	// of the data may change in the future.
-	AccountDetailsT account{ NULL,NULL,NULL,NULL };
-	account.AccountNumber = user.GetAccountNumber();
-	account.UserId = userId;
-	account.UserPassword = userPassword;
-	account.Balance = balance;
-	Bank::WriteAccountDataFile(account);
+	// TODO: IMPLEMENT ACTUAL ACCOUNT CREATION PROCEDURE HERE
 
 	// Show success message
 	ShowAppInfo();
@@ -510,9 +481,6 @@ auto NewAccountWizard() -> void
 #pragma endregion
 }
 
-/**
- * \brief Check user balance wizard.
- */
 auto CheckBalanceWizard() -> void
 {
 	SetConsoleTitleA("Bean Bank | Check Balance");
@@ -541,32 +509,7 @@ auto CheckBalanceWizard() -> void
 			if (!User::ValidateUserPassword(userPassword))
 				throw InvalidPasswordException();
 
-			auto userItr = vUsers.begin();
-
-			// Try to iterate over vUsers with given credentials to add funds.
-			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
-			{
-				if (userItr->GetAccountNumber() == accountNumber)
-				{
-					if (userItr->GetUserPassword() != userPassword)
-						throw InvalidPasswordException();
-
-					SetConsoleColor(2);
-					cout << "\n   Authentication Successful."
-						<< "\n\n   Your Balance is: ";
-					cout << userItr->GetBalance() << " INR" << endl;
-					SetConsoleColor(7);
-					cout << "\n   Press enter to return to main menu.";
-					{
-						CONSUME_NEWLINE_CHARACTER
-					}
-					return;
-				}
-			}
-
-			// Check if user exists in vUsers.
-			if (userItr == vUsers.end())
-				throw UserNotExistException();
+			// TODO: IMPLEMENT BALANCE CHECK 
 		}
 		catch (UserNotExistException&)
 		{
@@ -602,9 +545,6 @@ auto CheckBalanceWizard() -> void
 	}
 }
 
-/**
- * \brief Wizard for depositing funds.
- */
 auto DepositFundsWizard() -> void
 {
 	SetConsoleTitleA("Bean Bank | Deposit Funds");
@@ -639,39 +579,23 @@ auto DepositFundsWizard() -> void
 			if (!User::ValidateUserPassword(userPassword))
 				throw InvalidPasswordException();
 
-			auto userItr = vUsers.begin();
+			// TODO: IMPLEMENT ACTUAL FUNDS DEPOSIT TO DATA FILE 
 
-			// Try to iterate over vUsers with given credentials to add funds.
-			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
+			SetConsoleColor(2);
+			cout << "\n   Authentication Successful."
+				<< "\n   Funds Deposited Successfully." << endl;
+
+			// TODO: ALSO SHOW THE BALANCE HERE
+
+			SetConsoleColor(7);
+			cout << "\n   Press enter to return to main menu.";
 			{
-				if (userItr->GetAccountNumber() != accountNumber)
-					continue;
-
-				if (userItr->GetUserPassword() != userPassword)
-					throw InvalidPasswordException();
-
-				userItr->AddBalance(amount);
-
-				if (!Bank::SyncUserAccountData())
-					throw;
-				if (!Bank::WriteAccountDataFile())
-					throw;
-
-				SetConsoleColor(2);
-				cout << "\n   Authentication Successful."
-					<< "\n   Funds Deposited Successfully." << endl;
-				cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
-				SetConsoleColor(7);
-				cout << "\n   Press enter to return to main menu.";
-				{
-					CONSUME_NEWLINE_CHARACTER
-				}
-				return;
+				CONSUME_NEWLINE_CHARACTER
 			}
+			return;
 
-			// Check if user exists in vUsers.
-			if (userItr == vUsers.end())
-				throw UserNotExistException();
+			// TODO: IMPLEMENT EXCEPTION CHECK
+			// throw UserNotExistException();
 		}
 
 		catch (UserNotExistException&)
@@ -715,9 +639,6 @@ auto DepositFundsWizard() -> void
 	}
 }
 
-/**
- * \brief Wizard for withdrawing funds.
- */
 auto WithdrawFundsWizard() -> void
 {
 	SetConsoleTitleA("Bean Bank | Withdraw Funds");
@@ -753,37 +674,22 @@ auto WithdrawFundsWizard() -> void
 			if (!User::ValidateUserPassword(userPassword))
 				throw InvalidPasswordException();
 
-			auto userItr = vUsers.begin();
+			// TODO: IMPLEMENT ACTUAL FUNDS WITHDRAWAL TO DATA FILE 
 
-			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
+			SetConsoleColor(2);
+			cout << "\n   Authentication Successful."
+				<< "\n   Funds Withdrawal Successful." << endl;
+			// TODO: DON'T FORGET TO SHOW REMAINING FUNDS HERE
+			//  << "\n   Updated Balance: " << userItr->GetBalance() << " INR"
+			SetConsoleColor(7);
+			cout << "\n   Press enter to return to main menu.";
 			{
-				if (userItr->GetAccountNumber() != accountNumber)
-					continue;
-
-				if (userItr->GetUserPassword() != userPassword)
-					throw InvalidPasswordException();
-				if (!userItr->WithdrawBalance(amount))
-					throw InsufficientBalanceException();
-				if (!Bank::SyncUserAccountData())
-					throw;
-				if (!Bank::WriteAccountDataFile())
-					throw;
-
-				SetConsoleColor(2);
-				cout << "\n   Authentication Successful."
-					<< "\n   Funds Withdrawal Successful." << endl;
-				cout << "\n   Updated Balance: " << userItr->GetBalance() << " INR" << endl;
-				SetConsoleColor(7);
-				cout << "\n   Press enter to return to main menu.";
-				{
-					CONSUME_NEWLINE_CHARACTER
-				}
-				return;
+				CONSUME_NEWLINE_CHARACTER
 			}
+			return;
 
-			// check if user exists in vUsers.
-			if (userItr == vUsers.end())
-				throw UserNotExistException();
+			// TODO check if user exists and handle exception
+			//	throw UserNotExistException();
 		}
 
 		catch (UserNotExistException&)
@@ -835,9 +741,6 @@ auto WithdrawFundsWizard() -> void
 	}
 }
 
-/**
- * \brief Wizard for closing an account.
- */
 auto CloseAccountWizard() -> void
 {
 	SetConsoleTitleA("Bean Bank |  Close Account");
@@ -868,63 +771,23 @@ auto CloseAccountWizard() -> void
 			if (!User::ValidateUserPassword(userPassword))
 				throw InvalidPasswordException();
 
-			auto userItr = vUsers.begin();
+			// TODO: IMPLEMENT FUNDS ACCOUNT CLOSING  TO DATA FILE 
 
-			for (userItr = vUsers.begin(); userItr != vUsers.end(); ++userItr)
+			Account::RemoveAccount();
+			User::RemoveUser();
+			Bank::RemoveUser();
+			SetConsoleColor(2);
+			cout << "\n   Authentication Successful."
+				<< "\n   Account Closed Successfully." << endl;
+			SetConsoleColor(7);
+			cout << "\n   Press enter to return to main menu.";
 			{
-				if (userItr->GetAccountNumber() != accountNumber)
-					continue;
-
-				if (userItr->GetUserPassword() != userPassword)
-					throw InvalidPasswordException();
-
-				// Iterate over vUsers vector to find the user
-				userItr = std::ranges::find_if(vUsers, [&](const User& user)
-					{
-						return user.GetAccountNumber() == accountNumber;
-					});
-				if (userItr != vUsers.end())
-				{
-					// Calculate the index of the user.
-					const long long i = std::distance(vUsers.begin(), userItr);
-					vUsers.erase(vUsers.begin() + static_cast<int>(i));
-
-					// Iterate over vAccountDetails vector to find the user.
-					if (auto accountItr = std::ranges::find_if(vAccountDetails,
-						[&](const AccountDetailsT& account)
-						{
-							return account.AccountNumber == accountNumber;
-						}); accountItr != vAccountDetails.end())
-					{
-						// Erase the user from vAccountDetails vector.
-						const long long k = std::distance(vAccountDetails.begin(), accountItr);
-						vAccountDetails.erase(vAccountDetails.begin() + static_cast<int>(k));
-					}
-				}
-
-				if (!Bank::SyncUserAccountData())
-					throw;
-				if (!Bank::WriteAccountDataFile())
-					throw;
-				if (!Bank::WriteUserDataFile())
-					throw;
-				Account::RemoveAccount();
-				User::RemoveUser();
-				Bank::RemoveUser();
-				SetConsoleColor(2);
-				cout << "\n   Authentication Successful."
-					<< "\n   Account Closed Successfully." << endl;
-				SetConsoleColor(7);
-				cout << "\n   Press enter to return to main menu.";
-				{
-					CONSUME_NEWLINE_CHARACTER
-				}
-				return;
+				CONSUME_NEWLINE_CHARACTER
 			}
+			return;
 
-			// Check if user exists in vUsers.
-			if (userItr == vUsers.end())
-				throw UserNotExistException();
+			// TODO: Check if user exists id exception occurs
+			//	throw UserNotExistException();
 		}
 
 		catch (UserNotExistException&)
@@ -961,22 +824,14 @@ auto CloseAccountWizard() -> void
 	}
 }
 
-/**
- * \brief Wizard for displaying basic info of all users.
- */
 auto ShowAllAccountsWizard() -> void
 {
 	ShowAppInfo();
 	SetConsoleTitle(L"Bean Bank | All Accounts");
 	cout << "\n   - All Accounts - \n" << endl;
 
-	for (const auto& user : vUsers)
-	{
-		cout << "   Name: " << user.GetFirstName() << " " << user.GetLastName()
-			<< " \n   Age: " << user.GetAge() << "   User ID: " << user.GetUserId()
-			<< "\n   Phone Number: " << user.GetPhoneNumber()
-			<< "\n   Address: " << user.GetAddress() << "\n\n";
-	}
+	// TODO: IMPLEMENT SHOW ALL ACCOUNTS
+
 	cout << "\n   " << Bank::GetTotalUserCount() << " In Total."
 		<< "\n\n   Press enter to return to main menu." << endl;
 	{

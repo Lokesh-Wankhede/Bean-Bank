@@ -5,23 +5,30 @@
 // Author:      @LogicalLokesh - https://github.com/LogicalLokesh
 
 #include "User.h"
+#include <fstream>
+#include <regex>
 
 #include <iostream>
 
-unsigned int User::TotalUsers{ 0 };
+using std::regex;
 
-User::User(const std::string& firstName, const std::string& lastName,
-	const int age, const unsigned long long phoneNo,
-	const int userId, const int userPassword,
-	const GenderT gender, const std::string& address)
-	: MGender{ gender },
-	MFirstName{ firstName },
-	MLastName{ lastName },
-	MAddress{ address },
-	MAge{ age },
-	MUserId{ userId },
-	MUserPassword{ userPassword },
-	MPhoneNumber{ phoneNo }
+constexpr auto MIN_USER_AGE = 18;
+constexpr auto MAX_USER_AGE = 200;
+constexpr auto MIN_NAME_SIZE = 3;
+constexpr auto MAX_NAME_SIZE = 20;
+constexpr auto MIN_ADDRESS_SIZE = 5;
+constexpr auto MAX_ADDRESS_SIZE = 150;
+constexpr auto MIN_USER_ID = 1;
+constexpr auto MAX_USER_ID = 5000;
+constexpr auto MIN_USER_PASSWORD = 1000000;
+constexpr auto MAX_USER_PASSWORD = 9999999;
+
+unsigned int User::TotalUsers{};
+
+User::User(const std::string& firstName = "", const std::string& lastName = "",
+	const int age = 0, const unsigned long long phoneNo = 0,
+	const int userId = 0, const int userPassword = 0,
+	const GenderT gender = GenderT::Other, const std::string& address = "")
 {
 	if (ValidateName(firstName))
 		MFirstName = firstName;
@@ -41,11 +48,10 @@ User::User(const std::string& firstName, const std::string& lastName,
 		MAddress = address;
 }
 
-
-auto User::ValidateName(const string& name)-> bool
+auto User::ValidateName(const string& name) -> bool
 {
-	// name must be greater than 2 or less than 20 characters.
-	if (name.length() <= 2 || name.length() >= 20)
+	// name must be greater than MIN_NAME_SIZE or less than MAX_NAME_SIZE.
+	if (name.length() <= MIN_NAME_SIZE || name.length() >= MAX_NAME_SIZE)
 		return false;
 
 	// check if letters are in between A to Z or a to z.
@@ -57,10 +63,10 @@ auto User::ValidateName(const string& name)-> bool
 		name.length() > 2 && name.length() < 20;
 }
 
-auto User::ValidateAddress(const string& address)-> bool
+auto User::ValidateAddress(const string& address) -> bool
 {
-	// address must be greater than 2 or less than 150 characters.
-	if (address.length() <= 2 || address.length() >= 150)
+	// address must be greater than MIN_ADDRESS_SIZE or less than MAX_ADDRESS_SIZE.
+	if (address.length() <= MIN_ADDRESS_SIZE || address.length() >= MAX_ADDRESS_SIZE)
 		return false;
 
 	// space is not allowed in first or last position of address.
@@ -77,37 +83,44 @@ auto User::ValidateAddress(const string& address)-> bool
 	);
 }
 
-auto User::ValidateAge(const int age) -> bool { return (age >= 18 && age <= 200); }
+auto User::ValidateAge(const int age) -> bool
+{
+	return (age >= MIN_USER_AGE && age <= MAX_USER_AGE);
+}
 
 auto User::ValidatePhoneNumber(const unsigned long long phoneNumber) const -> bool
 {
 	// convert number to string for regex pattern matching.
 	const string s = std::to_string(phoneNumber);
 
-	// Indian phone numbers must be 10 digits long
+	// Indian phone numbers must be 10 digits long.
 	if (s.length() != 10)
 		return false;
 
-	// check if all characters in the phone number are digits
+	// check if all characters in the phone number are digits.
 	for (const char& c : s)
 	{
 		if (!std::isdigit(c))
 			return false;
 	}
 
-	// 1) Begins with 0 or 91
-	// 2) Then contains 6,7 or 8 or 9.
-	// 3) Then contains 9 digits
+	// 1) begins with 0 or 91
+	// 2) then contains 6,7 or 8 or 9
+	// 3) then contains 9 digits
 	const std::regex pattern("(0|91)?[6-9][0-9]{9}");
 
+	// match and return the result.
 	return std::regex_match(s, pattern);
 }
 
-auto User::ValidateUserId(const int userId) -> bool { return (userId > 0 && userId <= 50000); }
+auto User::ValidateUserId(const int userId) -> bool
+{
+	return (userId > MIN_USER_ID && userId <= MAX_USER_ID);
+}
 
 auto User::ValidateUserPassword(const int password) -> bool
 {
-	return password >= 1000000 && password <= 9999999;
+	return password >= MIN_USER_PASSWORD && password <= MAX_USER_PASSWORD;
 }
 
 auto operator<<(std::ofstream& ofs, const User& user) -> std::ofstream&
@@ -127,6 +140,8 @@ auto operator>>(std::ifstream& ifs, const User& user) -> std::ifstream&
 		<< static_cast<int>(user.GetGender()) << '-' << user.GetAddress() << "\n";
 	return ifs;
 }
+
+#pragma region Getters and Setters
 
 auto User::GetTotalUsers() -> unsigned { return TotalUsers; }
 auto User::AddUser() -> void { TotalUsers++; }
@@ -213,3 +228,5 @@ auto User::SetUserPassword(const int password) -> bool
 }
 
 auto User::GetUserPassword() const -> int { return MUserPassword; }
+
+#pragma endregion

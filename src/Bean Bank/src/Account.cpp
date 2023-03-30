@@ -24,7 +24,6 @@ auto Account::GenerateAccountNumber() -> unsigned long long
 	// insert the number and check if it's unique
 	do
 		accountNumber = dist(rng);
-	// insert the number and check if it's unique
 	while (!uniqueNumbers.insert(accountNumber).second);
 	return accountNumber;
 }
