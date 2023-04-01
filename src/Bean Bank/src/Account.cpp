@@ -6,12 +6,15 @@
 
 #include "Account.h"
 
+// account must be 10 digit number (for some reason that I don't know) 
+constexpr unsigned long long MIN_ACCOUNT_NUMBER = 999999999;
+constexpr unsigned long long MAX_ACCOUNT_NUMBER = 9999999999;
+
 unsigned int Account::TotalAccounts{ 0 };
 
 auto Account::ValidateAccountNumber(const unsigned long long accountNumber) -> bool
 {
-	// TODO: Replace the magic values with constants
-	return accountNumber >= 999999999 && accountNumber <= 9999999999;
+	return accountNumber >= MIN_ACCOUNT_NUMBER && accountNumber <= MAX_ACCOUNT_NUMBER;
 }
 
 auto Account::GenerateAccountNumber() -> unsigned long long

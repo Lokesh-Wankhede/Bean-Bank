@@ -27,6 +27,7 @@
     </ClCompile>
     <ClCompile Include="src\Account.cpp" />
     <ClCompile Include="src\Bank.cpp" />
+    <ClCompile Include="src\BankingService.cpp" />
     <ClCompile Include="src\Bean Bank.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\User.cpp" />
@@ -34,6 +35,7 @@
   <ItemGroup>
     <ClInclude Include="include\Account.h" />
     <ClInclude Include="include\Bank.h" />
+    <ClInclude Include="include\BankingService.h" />
     <ClInclude Include="include\Bean Bank.h" />
     <ClInclude Include="include\CoreException.h" />
     <ClInclude Include="include\Logger.h" />

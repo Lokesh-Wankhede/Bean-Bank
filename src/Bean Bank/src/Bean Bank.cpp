@@ -12,6 +12,7 @@
 #include <string>
 #include "Account.h"
 #include "Bank.h"
+#include "BankingService.h"
 #include "CoreException.h"
 #include "Logger.h"
 #include "User.h"
@@ -83,6 +84,16 @@ auto main() -> int
 			// user has decided to exit the program
 			return 0;
 
+		case 9:
+			BankingService::GetInstance().Initialize();
+			break;
+
+		case 555:
+			if (!ExportLog())
+				cout << "\n   Failed to export the log!\n\n";
+			cout << "\n   Log successfully exported to your desktop.\n\n";
+			break;
+
 		default:
 			// if user enters something other than a valid choice, they need their glasses
 			cout << "\n   Invalid input, please enter a valid choice.\n\n";
@@ -90,7 +101,8 @@ auto main() -> int
 
 		// wait for two seconds before showing the menu again
 		Sleep(2000);
-	} while (true);
+	}
+	while (true);
 }
 
 auto SetConsoleColor(const uint8_t colorCode) -> void
@@ -110,7 +122,12 @@ auto ExitWithMessage(const string& message) -> void
 	cout << message;
 	cout << "\n   Visit support page to get help with this error.";
 	SetConsoleColor(7);
-	cout << "\n\n   If you can't find the solution, please report this error via:" <<
+	LOGGER->error("Unplanned shutdown, exiting.");
+	// export the log to the desktop
+	ExportLog();
+	cout << "\n\n   A log has been exported to your desktop." <<
+
+		"\n   Please send this log to:" <<
 		"\n   Website: logicallokesh.net\\contact" <<
 		"\n   E-mail:  support@logicallokesh.net" <<
 		"\n   Instagram: @logicallokesh" <<
@@ -419,7 +436,7 @@ auto NewAccountWizard() -> void
 
 #pragma region Confirm and Create Account
 
-	// At this stage, all details are valid. Now display all user info for confirmation.
+	// at this stage, all details are valid Now display all user info for confirmation
 	ShowAppInfo();
 	SetConsoleTitleW(L"Bean Bank | Account Confirmation");
 	cout << "\n   - Account Confirmation -\n" << "\n"
@@ -452,7 +469,7 @@ auto NewAccountWizard() -> void
 
 	// TODO: IMPLEMENT ACTUAL ACCOUNT CREATION PROCEDURE HERE
 
-	// Show success message
+	// show success message
 	ShowAppInfo();
 	cout << endl;
 	SetConsoleTitleW(L"Bean Bank | Success");

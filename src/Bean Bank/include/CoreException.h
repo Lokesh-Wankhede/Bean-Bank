@@ -19,9 +19,14 @@ using std::exception;
  * \brief Mother of all exceptions.
  * Use this class as the base for all of our the custom exceptions.
  */
-class CoreException : public exception {
+class CoreException : public exception
+{
 public:
-	explicit CoreException(string message) : Message(std::move(message)) {}
+	explicit CoreException(string message, string name)
+		: Message(std::move(message))
+	{
+		LOGGER->critical("Exception thrown: {}. Reason: {}", name, Message);
+	}
 
 	[[nodiscard]] auto what() const noexcept -> const char* override { return Message.c_str(); }
 
@@ -29,12 +34,23 @@ private:
 	string Message;
 };
 
-class UserNotFoundException final : public CoreException {
+class DatabaseInitializationException final : public CoreException
+{
 public:
-	explicit UserNotFoundException(string message) : CoreException(std::move(message)) {}
+	explicit DatabaseInitializationException(string message)
+		: CoreException(std::move(message), "DatabaseInitializationException") {}
 };
 
-class UserPasswordNotFoundException final : public CoreException {
+class UserNotFoundException final : public CoreException
+{
 public:
-	explicit UserPasswordNotFoundException(string message) : CoreException(std::move(message)) {}
+	explicit UserNotFoundException(string message)
+		: CoreException(std::move(message), "UserNotFoundException") {}
+};
+
+class UserPasswordNotFoundException final : public CoreException
+{
+public:
+	explicit UserPasswordNotFoundException(string message)
+		: CoreException(std::move(message), "UserPasswordNotFoundException") {}
 };
