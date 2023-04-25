@@ -21,30 +21,21 @@
     <ClCompile Include="src\User.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Account.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Bank.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lib\sqlite-amalgamation-3410200\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\BankingService.cpp">
+    <ClCompile Include="src\DatabaseManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Bank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\User.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Account.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Bank.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Bean Bank.h">
@@ -62,7 +53,10 @@
     <ClInclude Include="include\CoreException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\BankingService.h">
+    <ClInclude Include="include\DatabaseManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Bank.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

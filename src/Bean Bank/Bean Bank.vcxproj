@@ -25,17 +25,15 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</SDLCheck>
     </ClCompile>
-    <ClCompile Include="src\Account.cpp" />
     <ClCompile Include="src\Bank.cpp" />
-    <ClCompile Include="src\BankingService.cpp" />
+    <ClCompile Include="src\DatabaseManager.cpp" />
     <ClCompile Include="src\Bean Bank.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\User.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Account.h" />
     <ClInclude Include="include\Bank.h" />
-    <ClInclude Include="include\BankingService.h" />
+    <ClInclude Include="include\DatabaseManager.h" />
     <ClInclude Include="include\Bean Bank.h" />
     <ClInclude Include="include\CoreException.h" />
     <ClInclude Include="include\Logger.h" />

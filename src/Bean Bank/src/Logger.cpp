@@ -36,15 +36,14 @@ auto InitializeLogger() -> void
 	// set the log pattern: [YYYY-MM-DD HH:MM:SS.microseconds] [log level] message.
 	LOGGER->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
 	LOGGER->set_level(spdlog::level::trace);
-	LOGGER->debug("Logger Initialized.");
+	LOGGER->debug("[Logger] [InitializeLogger] Logger Initialized.");
 }
 
 auto ExportLog() -> bool
 {
 	// get the path of the desktop
 	PWSTR path = nullptr;
-	if (const HRESULT result = SHGetKnownFolderPath(FOLDERID_Desktop, 0, nullptr, &path); result !=
-		S_OK)
+	if (SHGetKnownFolderPath(FOLDERID_Desktop, 0, nullptr, &path) != S_OK)
 	{
 		std::cerr << "Failed to get desktop path" << std::endl;
 		return false;
@@ -67,19 +66,16 @@ auto ExportLog() -> bool
 	{
 		// create the logFile and dump the trace
 		std::ofstream logFile(logPath);
-		logFile << "- Bean Bank Log & Error Report - \n"
+		logFile << "- Bean Bank Log & Horror Report - \n"
 			"- Version: " << Major << '.' << Minor << '.' << Build << " -\n\n"
 			<< "This file contains the errors and logs that Bean Bank occurred during the runtime.\n"
 			<< "\n\n-------------------- Start of BackTrace --------------------\n\n"
 			<< memorySink->LogBuffer()->str() <<
 			"\n\n-------------------- End of BackTrace --------------------\n\n" <<
-			"Goodbye." << std::endl;
+			"End of report, Goodbye." << std::endl;
 		logFile.close();
 	}
-	catch (const std::exception&)
-	{
-		return false;
-	}
+	catch (const std::exception&) { return false; }
 
 	return true;
 }

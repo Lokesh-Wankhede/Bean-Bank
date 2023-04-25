@@ -24,7 +24,16 @@ private:
 	std::shared_ptr<std::stringstream> MBuffer;
 };
 
+
+/**
+ * \brief This just sets the format, level and starting of a log. and does not actually initialize the logger.
+ */
 auto InitializeLogger() -> void;
+
+/**
+ * \brief Exports the current back trace of the log to the desktop.
+ * \return true if successful, false otherwise.
+ */
 auto ExportLog() -> bool;
 
 extern std::shared_ptr<MemorySink> memorySink;

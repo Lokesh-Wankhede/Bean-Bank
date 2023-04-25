@@ -10,10 +10,9 @@
 #pragma comment(lib, "version.lib") // for version info, used in GetVersionInfo();
 #include <iostream>
 #include <string>
-#include "Account.h"
 #include "Bank.h"
-#include "BankingService.h"
 #include "CoreException.h"
+#include "DatabaseManager.h"
 #include "Logger.h"
 #include "User.h"
 
@@ -35,8 +34,8 @@ auto main() -> int
 
 	do
 	{
-		// show what's in the menu
-		ShowMenu();
+		// show home page
+		OpenHomePage();
 
 		// get user's input and check if it's valid
 		if (!getline(cin, userChoice))
@@ -57,35 +56,22 @@ auto main() -> int
 		switch (choice)
 		{
 		case 1:
-			cout << "\n   Check Balance Wizard\n\n";
-			break;
+			if (OpenUserDashboard()) continue;
+			return 0;
 		case 2:
-			cout << "\n   Deposit Funds Wizard\n\n";
+			OpenNewAccountWizard();
 			break;
 		case 3:
-			cout << "\n   Withdraw Funds Wizard\n\n";
+			OpenSupportPage();
 			break;
 		case 4:
-			cout << "\n   New Account Wizard\n\n";
-			break;
-		case 5:
-			cout << "\n   Close Account Wizard\n\n";
-			break;
-		case 6:
-			cout << "\n   Show All Accounts Wizard\n\n";
-			break;
-		case 7:
-			cout << "\n   Opening Support page in your browser!\n\n";
-			ShellExecute(nullptr, L"open", L"https://logicallokesh.net/bean-bank", nullptr, nullptr,
-				SW_SHOWNORMAL);
-			ExitWithMessage("WTF bro!");
-			break;
-		case 8:
+			cout << "\n   Quit\n\n";
 			// user has decided to exit the program
 			return 0;
-
 		case 9:
-			BankingService::GetInstance().Initialize();
+			DatabaseManager::GetInstance().InitializeDatabase();
+			if (!DatabaseManager::GetInstance().ConstructDataTemplate())
+				cout << "failed";
 			break;
 
 		case 555:
@@ -99,10 +85,9 @@ auto main() -> int
 			cout << "\n   Invalid input, please enter a valid choice.\n\n";
 		}
 
-		// wait for two seconds before showing the menu again
+		// wait for two seconds
 		Sleep(2000);
-	}
-	while (true);
+	} while (true);
 }
 
 auto SetConsoleColor(const uint8_t colorCode) -> void
@@ -125,15 +110,14 @@ auto ExitWithMessage(const string& message) -> void
 	LOGGER->error("Unplanned shutdown, exiting.");
 	// export the log to the desktop
 	ExportLog();
-	cout << "\n\n   A log has been exported to your desktop." <<
-
-		"\n   Please send this log to:" <<
-		"\n   Website: logicallokesh.net\\contact" <<
-		"\n   E-mail:  support@logicallokesh.net" <<
-		"\n   Instagram: @logicallokesh" <<
-		"\n\n   Your feedback is really appreciated." <<
-		"\n   Thank You." <<
-		"\n\n   Press enter to exit.";
+	cout << "\n\n   A log has been exported to your desktop.\n"
+		"   Please send this log to:\n"
+		"   Website: logicallokesh.net\\contact\n"
+		"   E-mail:  support@logicallokesh.net\n"
+		"   Instagram: @logicallokesh\n\n"
+		"   Your feedback is really appreciated.\n"
+		"   Thank You.\n\n"
+		"   Press enter to exit.";
 	{
 		PAUSE
 	}
@@ -190,7 +174,7 @@ auto ClearScreen() -> void
 	// Fill the entire buffer with spaces
 	if (!FillConsoleOutputCharacter(
 		gHConsole,
-		static_cast<TCHAR>(' '),
+		' ',
 		cellCount,
 		homeCoords,
 		&count
@@ -211,6 +195,52 @@ auto ClearScreen() -> void
 	SetConsoleCursorPosition(gHConsole, homeCoords);
 }
 
+template <typename ValidationFn>
+auto GetUserInput(const string& prompt, ValidationFn validateFn) -> string
+{
+	string userInput;
+	while (true)
+	{
+		// prompt user for input
+		cout << "\n   " << prompt << ": ";
+		getline(cin, userInput);
+
+		// check if user wants to exit
+		if (userInput == "0")
+			return "";
+
+		// validate input
+		if (validateFn(userInput))
+			return userInput;
+		cout << "\n   Invalid input.\n";
+	}
+}
+
+auto GetUserInputNoValidation(const string& prompt) -> string
+{
+	string userInput;
+	while (true)
+	{
+		// prompt user for input
+		cout << "\n   " << prompt << ": ";
+		getline(cin, userInput);
+
+		// check if user wants to exit
+		if (userInput == "0")
+			return "";
+
+		return userInput;
+	}
+}
+
+
+auto OpenSupportPage() -> void
+{
+	cout << "\n   Opening Support page in your browser!\n\n";
+	ShellExecute(nullptr, L"open", L"https://logicallokesh.net",
+		nullptr, nullptr, SW_SHOWNORMAL);
+}
+
 auto ShowAppInfo() -> void
 {
 	ClearScreen();
@@ -229,629 +259,196 @@ auto ShowAppInfo() -> void
 	SetConsoleColor(7);
 }
 
-auto ShowMenu() -> void
+auto OpenHomePage() -> void
 {
 	SetConsoleTitleW(L"Bean Bank");
 	ClearScreen();
 	ShowAppInfo();
-	cout << "\n   Welcome to the Bean Bank!" << "\n"
-		<< "\n   Main Menu: " << "\n"
-		<< "   1. Balance Inquiry" << "\n"
-		<< "   2. Deposit Funds" << "\n"
-		<< "   3. Withdrawal" << "\n"
-		<< "   4. Create New Account" << "\n"
-		<< "   5. Close An Account" << "\n"
-		<< "   6. Show All Accounts" << "\n"
-		<< "   7. Support\n"
-		<< "   8. Quit\n" << "\n"
-		<< "   Enter your choice: ";
+	cout << "\n   Welcome to the Bean Bank!\n"
+		"\n   Home\n\n"
+		"   1. User Login\n"
+		"   2. Open New Account\n"
+		"   3. Support\n"
+		"   4. Quit\n\n"
+		"   Enter your choice: ";
 }
 
-auto NewAccountWizard() -> void
+auto OpenUserDashboard() -> bool
+{
+	string userChoice;
+	int choice;
+
+	do
+	{
+		SetConsoleTitleW(L"Bean Bank");
+		ClearScreen();
+		ShowAppInfo();
+		cout << "\n   User Dashboard\n\n"
+			"   1. Check Balance\n"
+			"   2. Deposit Funds\n"
+			"   3. Withdrawal\n"
+			"   4. Update Profile\n"
+			"   5. Close Your Account\n"
+			"   6. Support\n"
+			"   7. Log Out\n"
+			"   8. Quit\n\n"
+			"   Enter your choice: ";
+
+		// get user's input and check if it's valid
+		if (!getline(cin, userChoice))
+		{
+			// if user input is invalid, politely tell them to fix it
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
+			continue;
+		}
+
+		// use istringstream to check if user entered a valid choice
+		if (std::istringstream iss(userChoice); !(iss >> choice) || iss.peek() != EOF)
+		{
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
+			continue;
+		}
+
+		switch (choice)
+		{
+		case 1:
+			cout << "   Check Balance" << endl;
+			break;
+		case 2:
+			cout << "   Deposit funds" << endl;
+			break;
+		case 3:
+			cout << "   Withdraw" << endl;
+			break;
+		case 4:
+			cout << "   Update Profile" << endl;
+			break;
+		case 5:
+			cout << "   Close Your Account" << endl;
+			break;
+		case 6:
+			OpenSupportPage();
+			break;
+
+		case 7: return true; // log out
+		case 8: return false; // exit
+
+		default:
+			// if user enters something other than a valid choice, they need their glasses
+			cout << "\n   Invalid input, please enter a valid choice.\n\n";
+		}
+
+		// wait for two seconds
+		Sleep(2000);
+	} while (true);
+}
+
+auto OpenNewAccountWizard() -> void
 {
 	User user;
-	string firstName, lastName, address;
-	int age{ 0 }, userId{ 0 }, userPassword{ 0 };
-	unsigned long long phoneNumber;
 
 	ShowAppInfo();
-	SetConsoleTitleW(L"Bean Bank | Create New Account");
-	cout << "\n   - Create New Account - \n" << endl;
+	SetConsoleTitleW(L"Bean Bank | Open New Account");
+	cout << "\n   - Open New Account - \n\n\n"
+		"   Enter 0 to cancel & return to home." << endl;
 
-#pragma region Get Details
+	// get first name
+	const string firstName = GetUserInput("First name", User::ValidateName);
+	if (firstName.empty())
+		return;
+	user.SetFirstName(firstName);
 
-	// Set first name
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   First Name: ";
-		getline(cin, firstName);
-		if (user.SetFirstName(firstName))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid Name. It should not contain any numbers, special characters, or spaces,"
-			<< "\n   and it should be less than 20 characters. " << endl;
-		Sleep(3000);
-	}
-	// Set last name
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   Last Name: ";
-		getline(cin, lastName);
-		if (user.SetLastName(lastName))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid Name. It should not contain any numbers, special characters, or spaces,"
-			<< "\n   and it should be less than 20 characters." << endl;
-		Sleep(3000);
-	}
-	// Set age
-	while (true)
-	{
-		string ageStr;
-		SetConsoleColor(7);
-		cout << "   Age: ";
-		cin >> age;
-		{
-			CONSUME_NEWLINE_CHARACTER
-		}
-		if (user.SetAge(age))
-			break;
-		if (age < 18)
-		{
-			SetConsoleColor(4);
-			cout << "   You must be at least 18 years old to create an account." << endl;
-			Sleep(3000);
-			continue;
-		}
-		if (age > 200)
-		{
-			SetConsoleColor(4);
-			cout << "   Are you over 200? Check your age again." << endl;
-			Sleep(3000);
-		}
-	}
-	// Set gender
-	string gender;
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   1- Male, 2- Female, 3- Other\n";
-		cout << "   Gender: ";
-		getline(cin, gender);
-		if (gender.empty() || gender != "1" && gender != "2" && gender != "3")
-		{
-			SetConsoleColor(4);
-			cout << "   Please choose correct option." << endl;
-			Sleep(3000);
-			continue;
-		}
-		if (gender == "1")
-			user.SetGender(GenderT::Male);
-		if (gender == "2")
-			user.SetGender(GenderT::Female);
-		if (gender == "3")
-			user.SetGender(GenderT::Other);
-		break;
-	}
-	// Set phone number
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   Phone Number: ";
-		cin >> phoneNumber;
-		{
-			CONSUME_NEWLINE_CHARACTER
-		}
-		if (user.SetPhoneNumber(phoneNumber))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid phone number." << endl;
-		Sleep(3000);
-	}
-	// Set address
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   Address: ";
-		getline(cin, address);
-		if (user.SetAddress(address))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid address. It must be must be greater than 2 or less than 150 characters."
-			<< endl;
-		Sleep(3000);
-	}
-	// Set user id
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "   User ID: ";
-		string tmp; // Temporary string for storing user id
-		getline(cin, tmp);
-		try
-		{
-			userId = std::stoi(tmp); // Try to convert string to int
-		}
-		catch (const std::exception&)
-		{
-			userId = NULL; // Set to NULL if failed
-		}
+	// get middle name
+	const string middleName = GetUserInput("Middle name", User::ValidateName);
+	if (middleName.empty())
+		return;
+	user.SetMiddleName(middleName);
 
-		if (user.SetUserId(userId))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid User ID. It must be a number between 1 to 50,000." << endl;
-		Sleep(3000);
-	}
-	// Set user password
+	// get last name
+	const string lastName = GetUserInput("Last name", User::ValidateName);
+	if (lastName.empty())
+		return;
+	user.SetLastName(lastName);
+
+	// get age
 	while (true)
 	{
-		SetConsoleColor(7);
-		cout << "   Password: ";
-		string tmp; // Temporary string for storing password
-		getline(cin, tmp);
-		try
-		{
-			userPassword = std::stoi(tmp); // Try to convert string to int
-		}
-		catch (const std::exception&)
-		{
-			userPassword = NULL; // Set to NULL if failed
-		}
-		if (user.SetUserPassword(userPassword))
-			break;
-		SetConsoleColor(4);
-		cout << "   Invalid password. It must be 7 digit number." << endl;
-		Sleep(3000);
-	}
-
-	// Ask user if they want to deposit initial amount
-	ShowAppInfo();
-	int balance{ 0 };
-	cout << "\n   Would you like to deposit funds now?\n";
-	while (true)
-	{
-		cout << "   Enter amount: ";
-		SetConsoleColor(7);
-		string tmp;
-		getline(cin, tmp);
-		try
-		{
-			balance = std::stoi(tmp); // Try to convert string to int
-		}
-		catch (const std::exception&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid value." << endl;
-			Sleep(3000);
-			continue;
-		}
-		if (user.AddBalance(balance))
-			break;
-	}
-
-#pragma endregion
-
-#pragma region Confirm and Create Account
-
-	// at this stage, all details are valid Now display all user info for confirmation
-	ShowAppInfo();
-	SetConsoleTitleW(L"Bean Bank | Account Confirmation");
-	cout << "\n   - Account Confirmation -\n" << "\n"
-		<< "   Name: " << firstName << " " << lastName << "\n"
-		<< "   Age: " << age << "\n"
-		<< "   Gender: ";
-	if (gender == "1")
-		cout << "Male";
-	if (gender == "2")
-		cout << "Female";
-	if (gender == "3")
-		cout << "Other";
-	cout << "\n   Phone Number: " << phoneNumber << "\n"
-		<< "   Address: " << address << "\n"
-		<< "   User ID: " << userId << endl;
-	user.SetAccountNumber(User::GenerateAccountNumber());
-	cout << "   Account Number: " << user.GetAccountNumber() << endl;
-	cout << "   Password: " << userPassword << endl;
-	SetConsoleColor(6);
-	cout << "\n   Enter 1 to Create your Account. Enter 0 Otherwise." << endl;
-	cout << "   CONSENT: ";
-	string consent;
-	getline(cin, consent);
-	try
-	{
-		if (int ans = std::stoi(consent); ans != 1)
+		const string ageStr = GetUserInputNoValidation("Age");
+		if (ageStr.empty())
 			return;
-	}
-	catch (const std::exception&) { return; }
-
-	// TODO: IMPLEMENT ACTUAL ACCOUNT CREATION PROCEDURE HERE
-
-	// show success message
-	ShowAppInfo();
-	cout << endl;
-	SetConsoleTitleW(L"Bean Bank | Success");
-	cout << "   Account created successfully!\n\n"
-		<< "   Name: " << firstName << " " << lastName << "\n"
-		<< "   Age: " << age << "\n"
-		<< "   Gender: ";
-	if (gender == "1")
-		cout << "Male";
-	if (gender == "2")
-		cout << "Female";
-	if (gender == "3")
-		cout << "Other";
-	cout << "\n   Phone Number: " << phoneNumber << "\n"
-		<< "   Address: " << address << "\n"
-		<< "   User ID: " << userId << "\n"
-		<< "   Account Number: " << user.GetAccountNumber() << "\n"
-		<< "   Password: " << userPassword << "\n"
-		<< "\n   Please note down your credentials.\n\n"
-		<< "   Thank You!\n\n"
-		<< "   Press any key to continue.";
-	{
-		PAUSE
-	}
-
-#pragma endregion
-}
-
-auto CheckBalanceWizard() -> void
-{
-	SetConsoleTitleA("Bean Bank | Check Balance");
-	ShowAppInfo();
-	cout << "\n   - Check Your Balance -";
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "\n\n   Please Enter Your Account Number: ";
-		string tmp; // Temporary string for storing account number
-		getline(cin, tmp);
-		cout << "   Please Enter Your Password: ";
-		string pass; // Temporary string for user pass
-		getline(cin, pass);
-		class InvalidPasswordException : public std::exception { };
-		class InvalidAccountNumberException : public std::exception { };
-		class UserNotExistException : public std::exception { };
 		try
 		{
-			// Try to convert account number and password to string
-			const unsigned long long accountNumber = std::stoull(tmp);
-			const int userPassword = std::stoi(pass);
+			const int age = stoi(ageStr);
 
-			if (!User::ValidateAccountNumber(accountNumber))
-				throw InvalidAccountNumberException();
-			if (!User::ValidateUserPassword(userPassword))
-				throw InvalidPasswordException();
+			// check if user is minor
+			if (age < 18)
+			{
+				cout << "\n   You must be 18 years old to open an account.\n"
+					"   Press enter to continue...";
+				{
+					PAUSE
+				}
+				return;
+			}
 
-			// TODO: IMPLEMENT BALANCE CHECK 
-		}
-		catch (UserNotExistException&)
-		{
-			SetConsoleColor(4);
-			cout << "   User Not Found." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidPasswordException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Password." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (const std::exception& e)
-		{
-			if (strcmp(e.what(), "invalid stoi argument") == 0)
+			if (User::ValidateAge(age))
 			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
+				user.SetAge(age);
+				break;
 			}
-			if (strcmp(e.what(), "stoi argument out of range") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
+
+			cout << "\n   Invalid Input." << endl;
 		}
+		catch (exception&) { cout << "\n   Invalid Input." << endl; }
 	}
-}
 
-auto DepositFundsWizard() -> void
-{
-	SetConsoleTitleA("Bean Bank | Deposit Funds");
-	ShowAppInfo();
-	cout << "\n   - Deposit Funds -";
+	// get address
+	const string address = GetUserInput("Address", User::ValidateAddress);
+	if (address.empty())
+		return;
+	user.SetAddress(address);
+
+	// get phone number
+	const string phoneNumberStr = GetUserInput("Phone Number", User::ValidatePhoneNumberStr);
+	if (phoneNumberStr.empty())
+		return;
+	const unsigned long long phoneNumber = stoll(phoneNumberStr);
+	user.SetPhoneNumber(phoneNumber);
+
+	// get gender
 	while (true)
 	{
-		SetConsoleColor(7);
-		cout << "\n\n   Enter Your Account Number: ";
-		string tmp; // Temporary string for storing account number
-		getline(cin, tmp);
-		cout << "   Enter Your Password: ";
-		string pass; // Temporary string for user pass
-		getline(cin, pass);
-		cout << "   Enter The Amount: ";
-		string amt; // Temporary string for amount
-		getline(cin, amt);
-
-		class InvalidPasswordException : public std::exception { };
-		class InvalidAccountNumberException : public std::exception { };
-		class UserNotExistException : public std::exception { };
-
-		try
-		{
-			// try to convert to string
-			const unsigned long long accountNumber = std::stoull(tmp);
-			const int userPassword = std::stoi(pass);
-			const int amount = std::stoi(amt);
-
-			if (!User::ValidateAccountNumber(accountNumber))
-				throw InvalidAccountNumberException();
-			if (!User::ValidateUserPassword(userPassword))
-				throw InvalidPasswordException();
-
-			// TODO: IMPLEMENT ACTUAL FUNDS DEPOSIT TO DATA FILE 
-
-			SetConsoleColor(2);
-			cout << "\n   Authentication Successful."
-				<< "\n   Funds Deposited Successfully." << endl;
-
-			// TODO: ALSO SHOW THE BALANCE HERE
-
-			SetConsoleColor(7);
-			cout << "\n   Press enter to return to main menu.";
-			{
-				CONSUME_NEWLINE_CHARACTER
-			}
+		const string genderStr = GetUserInputNoValidation("Age");
+		if (genderStr.empty())
 			return;
-
-			// TODO: IMPLEMENT EXCEPTION CHECK
-			// throw UserNotExistException();
-		}
-
-		catch (UserNotExistException&)
-		{
-			SetConsoleColor(4);
-			cout << "   User Not Found." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidAccountNumberException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Account Number." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidPasswordException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Password." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (const std::exception& e)
-		{
-			if (strcmp(e.what(), "invalid stoi argument") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
-			if (strcmp(e.what(), "stoi argument out of range") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
-		}
-	}
-}
-
-auto WithdrawFundsWizard() -> void
-{
-	SetConsoleTitleA("Bean Bank | Withdraw Funds");
-	ShowAppInfo();
-	cout << "\n   - Withdraw Funds -";
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "\n\n   Enter Your Account Number: ";
-		string tmp; // Temporary string for storing account number
-		getline(cin, tmp);
-		cout << "   Enter Your Password: ";
-		string pass; // Temporary string for user pass
-		getline(cin, pass);
-		cout << "   Enter The Amount: ";
-		string amt; // Temporary string for amount
-		getline(cin, amt);
-
-		class InvalidPasswordException : public std::exception { };
-		class InvalidAccountNumberException : public std::exception { };
-		class InsufficientBalanceException : public std::exception { };
-		class UserNotExistException : public std::exception { };
-
 		try
 		{
-			// try to convert to string
-			const unsigned long long accountNumber = std::stoull(tmp);
-			const int userPassword = std::stoi(pass);
-			const int amount = std::stoi(amt);
-
-			if (!User::ValidateAccountNumber(accountNumber))
-				throw InvalidAccountNumberException();
-			if (!User::ValidateUserPassword(userPassword))
-				throw InvalidPasswordException();
-
-			// TODO: IMPLEMENT ACTUAL FUNDS WITHDRAWAL TO DATA FILE 
-
-			SetConsoleColor(2);
-			cout << "\n   Authentication Successful."
-				<< "\n   Funds Withdrawal Successful." << endl;
-			// TODO: DON'T FORGET TO SHOW REMAINING FUNDS HERE
-			//  << "\n   Updated Balance: " << userItr->GetBalance() << " INR"
-			SetConsoleColor(7);
-			cout << "\n   Press enter to return to main menu.";
-			{
-				CONSUME_NEWLINE_CHARACTER
-			}
-			return;
-
-			// TODO check if user exists and handle exception
-			//	throw UserNotExistException();
+			const int genderParsedInt = stoi(genderStr);
+			if (genderParsedInt == 1)
+				if (user.SetGender(GenderT::Male))
+					break;
+			if (genderParsedInt == 2)
+				if (user.SetGender(GenderT::Female))
+					break;
+			if (genderParsedInt == 3)
+				if (user.SetGender(GenderT::Other))
+					break;
+			cout << "\n   Invalid Input." << endl;
 		}
-
-		catch (UserNotExistException&)
-		{
-			SetConsoleColor(4);
-			cout << "   User Not Found." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidAccountNumberException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Account Number." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidPasswordException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Password." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InsufficientBalanceException&)
-		{
-			SetConsoleColor(4);
-			cout << "\n   Transaction Failed."
-				<< "\n   Insufficient Balance." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (const std::exception& e)
-		{
-			if (strcmp(e.what(), "invalid stoi argument") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
-			if (strcmp(e.what(), "stoi argument out of range") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
-		}
+		catch (exception&) { cout << "\n   Invalid Input." << endl; }
 	}
-}
 
-auto CloseAccountWizard() -> void
-{
-	SetConsoleTitleA("Bean Bank |  Close Account");
-	ShowAppInfo();
-	cout << "\n   - Close Account -";
-	while (true)
-	{
-		SetConsoleColor(7);
-		cout << "\n\n   Enter Your Account Number: ";
-		string tmp; // Temporary string for storing account number
-		getline(cin, tmp);
-		cout << "   Enter Your Password: ";
-		string pass; // Temporary string for user pass
-		getline(cin, pass);
+	// get userId
+	const string userId = GetUserInput("User ID", User::ValidateUserId);
+	if (userId.empty())
+		return;
+	user.SetUserId(userId);
 
-		class InvalidPasswordException : public std::exception { };
-		class InvalidAccountNumberException : public std::exception { };
-		class UserNotExistException : public std::exception { };
 
-		try
-		{
-			// Try to convert to string
-			const unsigned long long accountNumber = std::stoull(tmp);
-			const int userPassword = std::stoi(pass);
+	// get userPassword
+	const string userPassword = GetUserInput("User Password", User::ValidateUserId);
+	if (userPassword.empty())
+		return;
+	user.SetUserPassword(userPassword);
 
-			if (!User::ValidateAccountNumber(accountNumber))
-				throw InvalidAccountNumberException();
-			if (!User::ValidateUserPassword(userPassword))
-				throw InvalidPasswordException();
-
-			// TODO: IMPLEMENT FUNDS ACCOUNT CLOSING  TO DATA FILE 
-
-			Account::RemoveAccount();
-			User::RemoveUser();
-			Bank::RemoveUser();
-			SetConsoleColor(2);
-			cout << "\n   Authentication Successful."
-				<< "\n   Account Closed Successfully." << endl;
-			SetConsoleColor(7);
-			cout << "\n   Press enter to return to main menu.";
-			{
-				CONSUME_NEWLINE_CHARACTER
-			}
-			return;
-
-			// TODO: Check if user exists id exception occurs
-			//	throw UserNotExistException();
-		}
-
-		catch (UserNotExistException&)
-		{
-			SetConsoleColor(4);
-			cout << "   User Not Found." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidAccountNumberException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Account Number." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (InvalidPasswordException&)
-		{
-			SetConsoleColor(4);
-			cout << "   Invalid Password." << endl;
-			Sleep(3000);
-			SetConsoleColor(7);
-		}
-		catch (const std::exception& e)
-		{
-			if (strcmp(e.what(), "invalid stoi argument") == 0)
-			{
-				SetConsoleColor(4);
-				cout << "   Invalid Input." << endl;
-				Sleep(3000);
-				SetConsoleColor(7);
-			}
-		}
-	}
-}
-
-auto ShowAllAccountsWizard() -> void
-{
-	ShowAppInfo();
-	SetConsoleTitle(L"Bean Bank | All Accounts");
-	cout << "\n   - All Accounts - \n" << endl;
-
-	// TODO: IMPLEMENT SHOW ALL ACCOUNTS
-
-	cout << "\n   " << Bank::GetTotalUserCount() << " In Total."
-		<< "\n\n   Press enter to return to main menu." << endl;
-	{
-		PAUSE
-	}
 }

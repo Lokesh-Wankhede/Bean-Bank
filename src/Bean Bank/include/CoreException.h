@@ -25,7 +25,7 @@ public:
 	explicit CoreException(string message, string name)
 		: Message(std::move(message))
 	{
-		LOGGER->critical("Exception thrown: {}. Reason: {}", name, Message);
+		LOGGER->critical("[CoreException] Exception thrown: {}. Reason: {}", name, Message);
 	}
 
 	[[nodiscard]] auto what() const noexcept -> const char* override { return Message.c_str(); }

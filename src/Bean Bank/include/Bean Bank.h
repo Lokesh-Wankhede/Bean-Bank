@@ -20,14 +20,10 @@ using VersionInfoT = struct
  */
 auto GetVersionInfo() -> VersionInfoT;
 
-/** Consume newline character caused by previous input stream.
-* \note Must be used inside an empty scope to prevent redeclaration.
- */
+// Consume newline character caused by previous input stream.
 #define CONSUME_NEWLINE_CHARACTER string trash_; getline(cin, trash_);
 
-/** \note Soft pause the execution, wait for user to press enter.
-* Must be used inside an empty scope to prevent redeclaration.
-*/
+// Soft pause the execution, wait for user to press enter.
 #define PAUSE string trash_; getline(cin, trash_);
 
 /**
@@ -49,44 +45,39 @@ auto SetConsoleColor(uint8_t colorCode) -> void;
  */
 auto ClearScreen() -> void;
 
+
+template <typename ValidationFn>
+auto GetUserInput(const std::string& prompt, ValidationFn validateFn) -> std::string;
+
+/**
+ * \brief Gets the input from user, but does not perform validation.
+ * \param prompt text to prompt
+ * \return User Input.
+ */
+auto GetUserInputNoValidation(const std::string& prompt) -> std::string;
+
+/**
+ * \brief Opens support page in the browser.
+ */
+auto OpenSupportPage() -> void;
+
 /**
  * \brief Clears the console and shows application information and version info.
  */
 auto ShowAppInfo() -> void;
 
 /**
- * \brief Clears the console and shows the main menu.
+ * \brief Clears the console and opens the home page.
  */
-auto ShowMenu() -> void;
+auto OpenHomePage() -> void;
 
 /**
- * \brief Creates a new user account.
+ * \brief Opens the user dashboard area.
+ * \return true if user want to visit homepage, false if user want to exit the app.
  */
-auto NewAccountWizard() -> void;
+auto OpenUserDashboard() -> bool;
 
 /**
- * \brief Check user balance wizard.
+ * \brief Wizard for opening a new account.
  */
-[[noreturn]] auto CheckBalanceWizard() -> void;
-
-/**
- * \brief Wizard for depositing funds.
- */
-auto DepositFundsWizard() -> void;
-
-
-/**
- * \brief Wizard for withdrawing funds.
- */
-auto WithdrawFundsWizard() -> void;
-
-
-/**
- * \brief Wizard for closing an account.
- */
-auto CloseAccountWizard() -> void;
-
-/**
- * \brief Wizard for displaying basic info of all users.
- */
-auto ShowAllAccountsWizard() -> void;
+auto OpenNewAccountWizard() -> void;

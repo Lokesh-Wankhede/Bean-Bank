@@ -8,33 +8,40 @@
 #pragma once
 
 #include <string>
-#include "Account.h"
 
 using std::string;
 
 // Gender: 1- Male, 2- Female, 3- Other
 enum class GenderT { Male = 1, Female = 2, Other = 3 };
 
-class User : public Account
+class User
 {
 public:
-
 	User() = default;
 
 	/**
 	 * \brief Creates the user object.
 	 * \param firstName first name
+	 * \param middleName middle name
 	 * \param lastName last name
 	 * \param age age
 	 * \param phoneNo 10 digit phone number
 	 * \param userId unique Id
-	 * \param userPassword 7 digit number
+	 * \param userPassword userPassword
+	 * \param mPin User mPin
 	 * \param gender gender
 	 * \param address address
 	 */
-	explicit User(const string& firstName, const string& lastName,
-		int age, unsigned long long phoneNo, int userId, int userPassword,
-		GenderT gender, const string& address);
+	explicit User(const string& firstName, const string& middleName, const string& lastName,
+		int age, unsigned long long phoneNo, const string& userId, const string& userPassword,
+		int mPin, GenderT gender, const string& address);
+
+	/**
+	 * \brief Checks if user is valid or not.
+	 * \param user User to validate
+	 * \return true if valid, false otherwise.
+	 */
+	static auto IsValid(const User& user) -> bool;
 
 	/**
 	* \brief Checks for illegal characters in name.
@@ -61,44 +68,64 @@ public:
 	static auto ValidateAge(int age) -> bool;
 
 	/**
+	* \brief Validates the age. Age must be from 18 to 200 years.
+	*
+	* \param ageStr age in string
+	* \return true if age is valid, false otherwise.
+	*/
+	static auto ValidateAgeStr(const string& ageStr) -> bool;
+
+	/**
 	* \brief Validates the phone number by standard regex.
 	*
 	* \param phoneNumber 10 digit number to validate
 	* \return true if phone number valid, false otherwise.
 	*/
-	[[nodiscard("Please handle the return value.")]] auto ValidatePhoneNumber
-	(unsigned long long phoneNumber) const -> bool;
+	[[nodiscard("Please handle the return value.")]]
+	static auto ValidatePhoneNumber(unsigned long long phoneNumber) -> bool;
 
 	/**
-	* \brief Validates userId. It must in be between 1 to 50000.
+	* \brief Validates the phone number by standard regex.
 	*
-	* \param userId id of the user
+	* \param phoneNumber 10 digit number to validate (in string)
+	* \return true if phone number valid, false otherwise.
+	*/
+	[[nodiscard("Please handle the return value.")]]
+	static auto ValidatePhoneNumberStr(const string& phoneNumber) -> bool;
+
+	/**
+	* \brief Checks for problems in userId.
+	*
+	* \param userId userId to validate
 	* \return true if userId is valid, false otherwise.
 	*/
-	static auto ValidateUserId(int userId) -> bool;
+	static auto ValidateUserId(const string& userId) -> bool;
 
 	/**
-	* \brief Validates the user password. it must be 7 digit number.
+	* \brief Validates the user password.
 	 *
-	 * \param password 7 digit number
+	 * \param password password to validate
 	 * \return true if password is valid, false otherwise.
 	 */
-	static auto ValidateUserPassword(int password) -> bool;
+	static auto ValidateUserPassword(const string& password) -> bool;
 
-	friend auto operator<<(std::ofstream& ofs, const User& user)->std::ofstream&;
-
-	friend auto operator>>(std::ifstream& ifs, const User& user)->std::ifstream&;
+	/**
+	 * \brief Validates the mPin of the user.
+	 * \param pin Pin number to validate
+	 * \return true of valid, false otherwise.
+	 */
+	static auto ValidateMPin(int pin) -> bool;
 
 
 #pragma region Setters and Getters
 
-	static auto GetTotalUsers() -> unsigned int;
-	static auto AddUser() -> void;
-	static auto RemoveUser() -> void;
-
 	auto SetFirstName(const string& name) -> bool;
 
 	[[nodiscard("Please handle the return value.")]] auto GetFirstName() const->string;
+
+	auto SetMiddleName(const string& name) -> bool;
+
+	[[nodiscard("Please handle the return value.")]] auto GetMiddleName() const->string;
 
 	auto SetLastName(const string& name) -> bool;
 
@@ -121,21 +148,23 @@ public:
 	[[nodiscard("Please handle the return value.")]] auto
 		GetPhoneNumber() const -> unsigned long long;
 
-	auto SetUserId(int userId) -> bool;
+	auto SetUserId(const string& userId) -> bool;
 
-	[[nodiscard("Please handle the return value.")]] auto GetUserId() const -> int;
+	[[nodiscard("Please handle the return value.")]] auto GetUserId() const->string;
 
-	auto SetUserPassword(int password) -> bool;
+	auto SetUserPassword(const string& password) -> bool;
 
-	[[nodiscard("Please handle the return value.")]] auto GetUserPassword() const -> int;
+	[[nodiscard("Please handle the return value.")]] auto GetUserPassword() const->string;
+
+	auto SetMPin(int mPin) -> bool;
+
+	[[nodiscard("Please handle the return value.")]] auto GetMPin() const -> int;
 
 #pragma endregion
 
 private:
 	GenderT MGender{};
-	string MFirstName{}, MLastName{}, MAddress{};
-	int MAge{}, MUserId{}, MUserPassword{};
+	string MFirstName{}, MMiddleName{}, MLastName{}, MAddress{}, MUserId{}, MUserPassword{};
+	int MAge{}, MmPin{};
 	unsigned long long MPhoneNumber{};
-	// Total number of users in the bank.
-	static unsigned int TotalUsers;
 };
