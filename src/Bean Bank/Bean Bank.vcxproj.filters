@@ -30,7 +30,7 @@
     <ClCompile Include="src\DatabaseManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Bank.cpp">
+    <ClCompile Include="src\BankingService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,7 +56,7 @@
     <ClInclude Include="include\DatabaseManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Bank.h">
+    <ClInclude Include="include\BankingService.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

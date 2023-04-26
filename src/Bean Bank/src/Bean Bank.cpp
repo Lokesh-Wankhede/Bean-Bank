@@ -10,7 +10,7 @@
 #pragma comment(lib, "version.lib") // for version info, used in GetVersionInfo();
 #include <iostream>
 #include <string>
-#include "Bank.h"
+#include "BankingService.h"
 #include "CoreException.h"
 #include "DatabaseManager.h"
 #include "Logger.h"
@@ -114,7 +114,6 @@ auto ExitWithMessage(const string& message) -> void
 		"   Please send this log to:\n"
 		"   Website: logicallokesh.net\\contact\n"
 		"   E-mail:  support@logicallokesh.net\n"
-		"   Instagram: @logicallokesh\n\n"
 		"   Your feedback is really appreciated.\n"
 		"   Thank You.\n\n"
 		"   Press enter to exit.";
@@ -224,6 +223,13 @@ auto GetUserInputNoValidation(const string& prompt) -> string
 		// prompt user for input
 		cout << "\n   " << prompt << ": ";
 		getline(cin, userInput);
+
+		// check if input is empty
+		if (userInput.empty())
+		{
+			cout << "\n   Invalid input.\n";
+			continue;
+		}
 
 		// check if user wants to exit
 		if (userInput == "0")
@@ -418,7 +424,7 @@ auto OpenNewAccountWizard() -> void
 	// get gender
 	while (true)
 	{
-		const string genderStr = GetUserInputNoValidation("Age");
+		const string genderStr = GetUserInputNoValidation("Gender (1:Male, 2:Female, 3:Other)");
 		if (genderStr.empty())
 			return;
 		try
@@ -444,11 +450,33 @@ auto OpenNewAccountWizard() -> void
 		return;
 	user.SetUserId(userId);
 
-
 	// get userPassword
-	const string userPassword = GetUserInput("User Password", User::ValidateUserId);
+	const string userPassword = GetUserInput("User Password", User::ValidateUserPassword);
 	if (userPassword.empty())
 		return;
 	user.SetUserPassword(userPassword);
 
+	// get mpin
+	while (true)
+	{
+		const string mPinStr = GetUserInputNoValidation(
+			"(You will use this MPIN for performing any type of transactions)\n   6 Digit MPIN");
+		if (mPinStr.empty())
+			return;
+		try
+		{
+			if (const int mPin = stoi(mPinStr); User::ValidateMPin(mPin))
+			{
+				user.SetMPin(mPin);
+				break;
+			}
+
+			cout << "\n   Invalid Input." << endl;
+		}
+		catch (exception&) { cout << "\n   Invalid Input." << endl; }
+	}
+
+	// perform checkup
+	if (User::IsValid(user))
+		cout << "\n   user is valid! LOL";
 }

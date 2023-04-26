@@ -24,17 +24,17 @@ public:
 	 * \param firstName first name
 	 * \param middleName middle name
 	 * \param lastName last name
+	 * \param address address
+	 * \param gender gender
 	 * \param age age
 	 * \param phoneNo 10 digit phone number
 	 * \param userId unique Id
 	 * \param userPassword userPassword
 	 * \param mPin User mPin
-	 * \param gender gender
-	 * \param address address
 	 */
-	explicit User(const string& firstName, const string& middleName, const string& lastName,
-		int age, unsigned long long phoneNo, const string& userId, const string& userPassword,
-		int mPin, GenderT gender, const string& address);
+	explicit User(const string& firstName, const string& middleName, const string& lastName, const string& address,
+		GenderT gender, int age, unsigned long long phoneNo,
+		const string& userId, const string& userPassword, int mPin);
 
 	/**
 	 * \brief Checks if user is valid or not.
@@ -163,8 +163,11 @@ public:
 #pragma endregion
 
 private:
+	// avoid the grouping same types to follow the initialization order in the constructor.
+	string MFirstName{}, MMiddleName{}, MLastName{}, MAddress{};
 	GenderT MGender{};
-	string MFirstName{}, MMiddleName{}, MLastName{}, MAddress{}, MUserId{}, MUserPassword{};
-	int MAge{}, MmPin{};
+	int MAge{};
 	unsigned long long MPhoneNumber{};
+	string MUserId{}, MUserPassword{};
+	int MmPin{};
 };

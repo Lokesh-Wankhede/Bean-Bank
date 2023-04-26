@@ -19,7 +19,7 @@ auto DatabaseManager::GetInstance() -> DatabaseManager&
 
 auto DatabaseManager::InitializeDatabase() -> bool
 {
-	LOGGER->debug("[DatabaseManager] [InitializeDatabase] Initializing database...");
+	LOGGER->debug("[DatabaseManager->InitializeDatabase] Initializing database...");
 	try
 	{
 		// open the database file
@@ -29,12 +29,12 @@ auto DatabaseManager::InitializeDatabase() -> bool
 	catch (DatabaseInitializationException&)
 	{
 		LOGGER->critical(
-			"[DatabaseManager] [InitializeDatabase] Exception caught: DatabaseInitializationException");
+			"[DatabaseManager->InitializeDatabase] Exception caught: DatabaseInitializationException");
 		sqlite3_close(MBankDatabase);
 		return false;
 	}
 
-	LOGGER->debug("[DatabaseManager] [InitializeDatabase] Database initialized successfully.");
+	LOGGER->debug("[DatabaseManager->InitializeDatabase] Database initialized successfully.");
 	return true;
 }
 
@@ -42,19 +42,19 @@ auto DatabaseManager::InitializeDatabase() -> bool
 auto DatabaseManager::ConstructDataTemplate() -> bool
 {
 	LOGGER->debug(
-		"[DatabaseManager] [ConstructDataTemplate] Reconstructing data template started...");
+		"[DatabaseManager->ConstructDataTemplate] Reconstructing data template started...");
 
 	// make sure the database is initialized
 	if (!InitializeDatabase())
 	{
 		LOGGER->error(
-			"[DatabaseManager] [ConstructDataTemplate] Data template construction failed. "
+			"[DatabaseManager->ConstructDataTemplate] Data template construction failed. "
 			"Database is not initialized.");
 		return false;
 	}
 
 	LOGGER->debug(
-		"[DatabaseManager] [ConstructDataTemplate] Data template construction success.");
+		"[DatabaseManager->ConstructDataTemplate] Data template construction success.");
 
 	// create main the table if not already exists
 	if (sqlite3_exec(MBankDatabase,
@@ -64,7 +64,7 @@ auto DatabaseManager::ConstructDataTemplate() -> bool
 		nullptr, nullptr, nullptr) != SQLITE_OK)
 	{
 		LOGGER->error(
-			"[DatabaseManager] [ConstructDataTemplate] Data template construction failed. {}",
+			"[DatabaseManager->ConstructDataTemplate] Data template construction failed. {}",
 			sqlite3_errmsg(MBankDatabase));
 		return false;
 	}
@@ -74,6 +74,6 @@ auto DatabaseManager::ConstructDataTemplate() -> bool
 		return true;
 
 	// database is not closed successfully
-	LOGGER->error("[DatabaseManager] [ConstructDataTemplate] {}", sqlite3_errmsg(MBankDatabase));
+	LOGGER->error("[DatabaseManager->ConstructDataTemplate] {}", sqlite3_errmsg(MBankDatabase));
 	return false;
 }

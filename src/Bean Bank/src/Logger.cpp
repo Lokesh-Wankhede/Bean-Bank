@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include <fstream>
 #include <iostream>
+#include <Lmcons.h> // for UNLEN
 #include <ShlObj.h> // for getting the path of the desktop
 #include <Windows.h>
 #include "Bean Bank.h"
@@ -33,8 +34,8 @@ auto MemorySink::flush_() -> void {}
 
 auto InitializeLogger() -> void
 {
-	// set the log pattern: [YYYY-MM-DD HH:MM:SS.microseconds] [log level] message.
-	LOGGER->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+	// set the log pattern: [YYYY-MM-DD HH:MM:SS] [log level] message.
+	LOGGER->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
 	LOGGER->set_level(spdlog::level::trace);
 	LOGGER->debug("[Logger] [InitializeLogger] Logger Initialized.");
 }
@@ -57,9 +58,26 @@ auto ExportLog() -> bool
 	// let the path lead to salvation.. (no memory leaks)
 	CoTaskMemFree(path);
 
-	// name of the log in the format - [name] [version] .log
-	const std::wstring logName = L"Bean Bank v" + std::to_wstring(Major) + L'.' +
-		std::to_wstring(Minor) + L'.' + std::to_wstring(Build) + L".log";
+	// Get the current date and time
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+
+	// Get the user name
+	wchar_t userName[UNLEN + 1];
+	DWORD userNameSize = UNLEN + 1;
+	GetUserNameW(userName, &userNameSize);
+
+	// Get the host name
+	wchar_t hostName[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD hostNameSize = MAX_COMPUTERNAME_LENGTH + 1;
+	GetComputerNameW(hostName, &hostNameSize);
+
+	// Build the log name with the date, time, user name, and host name
+	const std::wstring logName = L"Bean_Bank_" + std::to_wstring(time.wYear) + L"-" +
+		std::to_wstring(time.wMonth) + L"-" + std::to_wstring(time.wDay) + L"_" + std::to_wstring(time.wHour) +
+		L"-" + std::to_wstring(time.wMinute) + L"-" + std::to_wstring(time.wSecond) +
+		L"_" + std::wstring(userName) + L"_" + std::wstring(hostName) + L".log";
+
 	const std::wstring logPath = desktopPath + L"\\" + logName;
 
 	try
